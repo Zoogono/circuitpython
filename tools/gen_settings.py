@@ -30,17 +30,20 @@ crc16 = crc16_func(binary_data)
 #     uint32_t app_image_size;  /**< Size of Application image in bank0 if bank_0 code is BANK_VALID_SD. */
 #     uint32_t sd_image_start;  /**< Location in flash where SoftDevice image is stored for SoftDevice update. */
 # } bootloader_settings_t;
+
+
 class BootloaderSettings(ctypes.Structure):
     _fields_ = [
-        ("bank_0", ctypes.c_uint16), # is valid app
-        ("bank_0_crc", ctypes.c_uint16), # app crc
-        ("bank_1", ctypes.c_uint16), 
-        ("bank_0_size", ctypes.c_int32), # app size
+        ("bank_0", ctypes.c_uint16),  # is valid app
+        ("bank_0_crc", ctypes.c_uint16),  # app crc
+        ("bank_1", ctypes.c_uint16),
+        ("bank_0_size", ctypes.c_int32),  # app size
         ("sd_image_size", ctypes.c_int32),
         ("bl_image_size", ctypes.c_int32),
         ("app_image_size", ctypes.c_int32),
         ("sd_image_start", ctypes.c_int32),
     ]
+
 
 bootloader_settings = BootloaderSettings()
 bootloader_settings.bank_0 = 0x01
@@ -53,7 +56,9 @@ print("bank_0_crc:", hex(bootloader_settings.bank_0_crc))
 print("bank_1:", hex(bootloader_settings.bank_1))
 print("bank_0_size:", hex(bootloader_settings.bank_0_size))
 
-bootloader_data = ctypes.string_at(ctypes.byref(bootloader_settings), ctypes.sizeof(bootloader_settings))
+bootloader_data = ctypes.string_at(
+    ctypes.byref(bootloader_settings), ctypes.sizeof(bootloader_settings)
+)
 
 # Create an IntelHex object for the bootloader settings
 bootloader_hex = IntelHex()

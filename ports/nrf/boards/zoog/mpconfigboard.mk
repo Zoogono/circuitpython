@@ -1,5 +1,7 @@
-USB_VID = 0x1915 # Nordic's VID
-USB_PID = 0xBCDE # ABCD is the PID for when it's it bootloader mode. Not sure if we needed a different PID here.
+ # Nordic's VID
+USB_VID = 0x1915
+# ABCD is the PID for when it's it bootloader mode. Not sure if we needed a different PID here.
+USB_PID = 0xBCDE
 USB_PRODUCT = "Zoog"
 USB_MANUFACTURER = "Zoogono"
 
