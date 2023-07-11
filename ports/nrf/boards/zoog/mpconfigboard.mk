@@ -17,4 +17,4 @@ CIRCUITPY_SDCARDIO = 0
 
 FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_BLE
 FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_hashlib
-# Add ishmael
+FROZEN_MPY_DIRS += $(TOP)/frozen/zoog-firmware

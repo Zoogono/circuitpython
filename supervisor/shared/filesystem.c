@@ -74,13 +74,50 @@ static void make_sample_code_file(FATFS *fatfs) {
     #if CIRCUITPY_FULL_BUILD
     FIL fs;
     UINT char_written = 0;
-    const byte buffer[] = "print(\"Hello World!\")\n";
+    const byte buffer[] =
+        "import gc\n"
+        "\n"
+        "from zoog_firmware.nrf import Bootstrap\n"
+        "\n"
+        "debug = False\n"
+        "\n"
+        "# Comment out to turn on debugging\n"
+        "# debug = True\n"
+        "\n"
+        "if debug:\n"
+        "    print(\"Starting memory:\", gc.mem_free())  # type: ignore[attr-defined]\n"
+        "bootstrap = Bootstrap(debug=debug)\n"
+        "bootstrap.initialize()\n"
+        "gc.collect()\n"
+        "if debug:\n"
+        "    print(\"Memory after initialization:\", gc.mem_free())  # type: ignore[attr-defined]\n"
+        "bootstrap.start()\n";
+
     // Create or modify existing code.py file
-    f_open(fatfs, &fs, "/code.py", FA_WRITE | FA_CREATE_ALWAYS);
+    f_open(fatfs, &fs, "/main.py", FA_WRITE | FA_CREATE_ALWAYS);
     f_write(&fs, buffer, sizeof(buffer) - 1, &char_written);
     f_close(&fs);
+
+    char_written = 0;
+
+    const byte boot_buffer[] =
+        "import board\n"
+        "import digitalio\n"
+        "import storage\n"
+        "\n"
+        "button = digitalio.DigitalInOut(board.D4)\n"
+        "button.direction = digitalio.Direction.INPUT\n"
+        "button.pull = digitalio.Pull.DOWN\n"
+        "\n"
+        "# If button up, CircuitPython can write to the drive\n"
+        "storage.remount(\"/\", button.value)\n";
+
+    // Create or modify existing boot.py file
+    f_open(fatfs, &fs, "/boot.py", FA_WRITE | FA_CREATE_ALWAYS);
+    f_write(&fs, buffer, sizeof(boot_buffer) - 1, &char_written);
+    f_close(&fs);
     #else
-    make_empty_file(fatfs, "/code.py");
+    make_empty_file(fatfs, "/main.py");
     #endif
 }
 
