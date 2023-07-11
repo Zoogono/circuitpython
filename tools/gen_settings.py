@@ -31,6 +31,8 @@ crc16 = crc16_func(binary_data)
 #     uint32_t app_image_size;  /**< Size of Application image in bank0 if bank_0 code is BANK_VALID_SD. */
 #     uint32_t sd_image_start;  /**< Location in flash where SoftDevice image is stored for SoftDevice update. */
 # } bootloader_settings_t;
+
+
 class BootloaderSettings(ctypes.Structure):
     _fields_ = [
         ("bank_0", ctypes.c_uint16),  # is valid app
