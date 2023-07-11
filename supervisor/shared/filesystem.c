@@ -153,8 +153,39 @@ bool filesystem_init(bool create_allowed, bool force_create) {
         #if CIRCUITPY_OS_GETENV
         make_empty_file(&vfs_fat->fatfs, "/settings.toml");
         #endif
+
+        #if CIRCUITPY_FULL_BUILD && ZOOGONO
+        MAKE_FILE_WITH_OPTIONAL_CONTENTS(&vfs_fat->fatfs, "/main.py", "import gc\n"
+            "\n"
+            "from zoog_firmware.nrf import Bootstrap\n"
+            "\n"
+            "debug = False\n"
+            "\n"
+            "# Comment out to turn on debugging\n"
+            "# debug = True\n"
+            "\n"
+            "if debug:\n"
+            "    print(\"Starting memory:\", gc.mem_free())  # type: ignore[attr-defined]\n"
+            "bootstrap = Bootstrap(debug=debug)\n"
+            "bootstrap.initialize()\n"
+            "gc.collect()\n"
+            "if debug:\n"
+            "    print(\"Memory after initialization:\", gc.mem_free())  # type: ignore[attr-defined]\n"
+            "bootstrap.start()\n");
+        MAKE_FILE_WITH_OPTIONAL_CONTENTS(&vfs_fat->fatfs, "/boot.py", "import board\n"
+            "import digitalio\n"
+            "import storage\n"
+            "\n"
+            "button = digitalio.DigitalInOut(board.D4)\n"
+            "button.direction = digitalio.Direction.INPUT\n"
+            "button.pull = digitalio.Pull.DOWN\n"
+            "\n"
+            "# If button up, CircuitPython can write to the drive\n"
+            "storage.remount(\"/\", button.value)\n");
+        #else
         // make a sample code.py file
         MAKE_FILE_WITH_OPTIONAL_CONTENTS(&vfs_fat->fatfs, "/code.py", "print(\"Hello World!\")\n");
+        #endif
 
         // create empty lib directory
         res = f_mkdir(&vfs_fat->fatfs, "/lib");

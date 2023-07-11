@@ -14,7 +14,8 @@ CIRCUITPY_FREQUENCYIO = 0
 CIRCUITPY_KEYPAD = 0
 CIRCUITPY_RGBMATRIX = 0
 CIRCUITPY_SDCARDIO = 0
+ZOOGONO = 1
 
 FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_BLE
 FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_hashlib
-# Add ishmael
+FROZEN_MPY_DIRS += $(TOP)/frozen/zoog-firmware
