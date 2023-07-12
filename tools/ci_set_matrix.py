@@ -41,8 +41,10 @@ IGNORE = [
 
 changed_files = {}
 try:
+    print(os.environ["CHANGED_FILES"])
     changed_files = json.loads(os.environ["CHANGED_FILES"])
 except json.decoder.JSONDecodeError as exc:
+    print(exc)
     if exc.msg != "Expecting value":
         raise
 
