@@ -145,6 +145,7 @@ def get_board_mapping():
 
 def get_version_info():
     version = None
+    print(git("rev-parse", "--short", "HEAD"))
     sha = git("rev-parse", "--short", "HEAD").stdout.decode("utf-8")
     try:
         version = git("describe", "--tags", "--exact-match").stdout.decode("utf-8").strip()
