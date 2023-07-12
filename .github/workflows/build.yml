@@ -138,11 +138,8 @@ jobs:
       id: set-matrix
       working-directory: tools
       env:
-        CHANGED_FILES: ${{ steps.filter.outputs.changed_files }} ?? ['../../boards/zoog/mpconfig.mk']
-      run: |
-        echo "CHANGED: ${{ steps.filter.outputs.changed_files }}"
-        echo "CHANGED_FILES $CHANGED_FILES"
-        python3 -u ci_set_matrix.py
+        CHANGED_FILES: "['../../boards/zoog/mpconfig.mk']"
+      run: python3 -u ci_set_matrix.py
 
 
   mpy-cross-mac:
