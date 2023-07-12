@@ -67,17 +67,14 @@ def set_boards_to_build(build_all):
     boards_to_build = all_board_ids
 
     if not build_all:
-        print("Not building all...")
         boards_to_build = set()
         board_pattern = re.compile(r"^ports/[^/]+/boards/([^/]+)/")
         port_pattern = re.compile(r"^ports/([^/]+)/")
         for p in changed_files:
-            print(p)
             # See if it is board specific
             board_matches = board_pattern.search(p)
             if board_matches:
                 board = board_matches.group(1)
-                print(board)
                 boards_to_build.add(board)
                 continue
 
@@ -86,7 +83,6 @@ def set_boards_to_build(build_all):
             if port_matches:
                 port = port_matches.group(1)
                 if port != "unix":
-                    print(port)
                     boards_to_build.update(port_to_boards[port])
                 continue
 
