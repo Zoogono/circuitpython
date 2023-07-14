@@ -287,7 +287,7 @@ jobs:
       env:
         SSH_KEY: ${{ secrets.PRIVATE_SUBMODULE_SSH_KEY }}
       run: |
-        mkdir $HOME/.ssh && echo "$SSH_KEY" > $HOME/.ssh/id_rsa && chmod 600 $HOME/.ssh/id_rsa
+        mkdir $HOME/.ssh && echo "${{ env.SSH_KEY }}" > $HOME/.ssh/id_rsa && chmod 600 $HOME/.ssh/id_rsa
         python tools/ci_fetch_deps.py ${{ matrix.board }} ${{ github.sha }}
     - name: Install dependencies
       run: |
