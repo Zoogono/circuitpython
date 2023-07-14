@@ -321,13 +321,6 @@ jobs:
     #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
     #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     #   if: (github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository_owner == 'adafruit') || (github.event_name == 'release' && (github.event.action == 'published' || github.event.action == 'rerequested'))
-    - name: Add release tag
-      if: ${{ github.event_name == 'release' }}
-      run: |
-        for file in $(find bin/${{ matrix.board }} -type f); do
-          new_filename="${file%.*}_${{github.ref}}.${file##*.}"  # Add version identifier to the filename
-          mv "$file" "$new_filename"
-        done
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v1
       if: ${{ github.event_name == 'release' }}
