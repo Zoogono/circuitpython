@@ -284,7 +284,11 @@ jobs:
         submodules: false
         fetch-depth: 1
     - name: Get CP deps
-      run: python tools/ci_fetch_deps.py ${{ matrix.board }} ${{ github.sha }}
+      env:
+        SSH_KEY: ${{ secrets.PRIVATE_SUBMODULE_SSH_KEY }}
+      run: |
+        mkdir $HOME/.ssh && echo "$SSH_KEY" > $HOME/.ssh/id_rsa && chmod 600 $HOME/.ssh/id_rsa
+        python tools/ci_fetch_deps.py ${{ matrix.board }} ${{ github.sha }}
     - name: Install dependencies
       run: |
         sudo apt-get install -y gettext
@@ -304,6 +308,7 @@ jobs:
       run: python3 -u build_release_files.py
       working-directory: tools
       env:
+        REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
         BOARDS: ${{ matrix.board }}
     - uses: actions/upload-artifact@v2
       with:
