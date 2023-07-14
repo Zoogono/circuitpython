@@ -239,7 +239,7 @@ $(BUILD)/firmware.uf2: $(BUILD)/firmware.hex
 $(BUILD)/firmware.bootloader.hex: $(BUILD)/firmware.hex
 	$(STEPECHO) "Create $@"
 	$(PYTHON) $(TOP)/tools/gen_settings.py $(BUILD)/firmware.hex $(BUILD)/settings.hex
-	curl -vLJ -H "Authorization: Bearer ${GITHUB_TOKEN}" -H 'Accept: application/octet-stream' 'https://api.github.com/repos/Zoogono/Adafruit_nRF52_Bootloader/releases/assets/115975353' -o $(BUILD)/bootloader.hex
+	curl -vLJ -H "Authorization: Bearer ${REPO_TOKEN}" -H 'Accept: application/octet-stream' 'https://api.github.com/repos/Zoogono/Adafruit_nRF52_Bootloader/releases/assets/115975353' -o $(BUILD)/bootloader.hex
 	$(Q)hexmerge.py -o $@ --no-start-addr --overlap=ignore $(BUILD)/bootloader.hex $(BUILD)/settings.hex $^
 
 #####################
