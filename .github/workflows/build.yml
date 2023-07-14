@@ -324,9 +324,12 @@ jobs:
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v1
       if: ${{ github.event_name == 'release' }}
+      env:
+        RELEASE_WRITE_TOKEN: ${{ secrets.RELEASE_WRITE_TOKEN }}
       with:
         files: |
           bin/${{ matrix.board }}/**/*
+        token: ${{ env.RELEASE_WRITE_TOKEN }}
 
   build-riscv:
     runs-on: ubuntu-20.04
