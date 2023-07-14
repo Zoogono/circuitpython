@@ -388,4 +388,4 @@
 	url = https://github.com/adafruit/Adafruit_CircuitPython_hashlib.git
 [submodule "frozen/zoog-firmware"]
 	path = frozen/zoog-firmware
-	url = https://github.com/Zoogono/zoog-firmware
+	url = git@github.com:Zoogono/zoog-firmware.git
