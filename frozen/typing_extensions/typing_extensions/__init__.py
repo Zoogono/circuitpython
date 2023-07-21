@@ -1,0 +1,2 @@
+class TypedDict:
+    pass
