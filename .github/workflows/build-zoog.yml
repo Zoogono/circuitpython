@@ -81,7 +81,8 @@ jobs:
       run: python3 -u ci_set_matrix.py
       working-directory: tools
       env:
-        LAST_FAILED_JOBS: ${{ steps.get-last-commit-with-checks.outputs.check_runs }}
+        CHANGED_FILES: '["ports/nrf/boards/zoog/mpconfig.mk"]'
+        # LAST_FAILED_JOBS: ${{ steps.get-last-commit-with-checks.outputs.check_runs }}
 
   tests:
     needs: scheduler
