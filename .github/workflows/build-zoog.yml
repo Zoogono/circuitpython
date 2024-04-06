@@ -35,11 +35,10 @@ jobs:
     - name: Set up submodules
       id: set-up-submodules
       uses: ./.github/actions/deps/submodules
+      secrets: inherit
       with:
         action: cache
         version: true
-      secrets:
-        PRIVATE_SUBMODULE_SSH_KEY: ${{ secrets.PRIVATE_SUBMODULE_SSH_KEY }}
     - name: Set up external
       uses: ./.github/actions/deps/external
       with:

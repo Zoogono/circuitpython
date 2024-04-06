@@ -48,8 +48,7 @@ jobs:
     - name: Set up submodules
       id: set-up-submodules
       uses: ./.github/actions/deps/submodules
-      secrets:
-        PRIVATE_SUBMODULE_SSH_KEY: ${{ secrets.PRIVATE_SUBMODULE_SSH_KEY }}
+      secrets: inherit
 
     - name: Set up external
       uses: ./.github/actions/deps/external
