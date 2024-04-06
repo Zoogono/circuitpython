@@ -52,6 +52,9 @@ enable-if-not=$(if $(filter 1,$(1)),0,1)
 CIRCUITPY = 1
 CFLAGS += -DCIRCUITPY=$(CIRCUITPY)
 
+ZOOGONO ?= 0
+CFLAGS += -DZOOGONO=$(ZOOGONO)
+
 # Smaller builds can be forced for resource constrained chips (typically SAMD21s
 # without external flash) by setting CIRCUITPY_FULL_BUILD=0. Avoid using this
 # for merely incomplete ports, as it changes settings in other files.
