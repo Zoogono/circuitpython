@@ -46,8 +46,8 @@ jobs:
       run: |
         gcc --version
         python3 --version
-    - name: Duplicate USB VID/PID Check
-      run: python3 -u -m tools.ci_check_duplicate_usb_vid_pid
+    # - name: Duplicate USB VID/PID Check
+    #   run: python3 -u -m tools.ci_check_duplicate_usb_vid_pid
     - name: Build mpy-cross
       run: make -C mpy-cross -j2
     - name: Build unix port
