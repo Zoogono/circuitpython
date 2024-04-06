@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-22.04
     outputs:
       ports: ${{ steps.set-matrix.outputs.ports }}
+      cp-version: ${{ steps.set-up-submodules.outputs.version }}
     steps:
     - name: Dump GitHub context
       run: echo "$GITHUB_CONTEXT"
