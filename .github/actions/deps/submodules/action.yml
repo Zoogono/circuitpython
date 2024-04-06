@@ -27,6 +27,10 @@ inputs:
     default: false
     type: boolean
 
+  secrets:
+    PRIVATE_SUBMODULE_SSH_KEY:
+      required: false
+
 outputs:
   frozen:
     description: 'Whether frozen submodules were fetched'

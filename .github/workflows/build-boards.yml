@@ -14,6 +14,8 @@ on:
         required: false
       AWS_SECRET_ACCESS_KEY:
         required: false
+      PRIVATE_SUBMODULE_SSH_KEY:
+        required: false
 
 jobs:
   board:
@@ -46,6 +48,8 @@ jobs:
     - name: Set up submodules
       id: set-up-submodules
       uses: ./.github/actions/deps/submodules
+      secrets:
+        PRIVATE_SUBMODULE_SSH_KEY: ${{ secrets.PRIVATE_SUBMODULE_SSH_KEY }}
 
     - name: Set up external
       uses: ./.github/actions/deps/external
