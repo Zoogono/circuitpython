@@ -27,8 +27,8 @@ inputs:
     default: false
     type: boolean
 
-secrets:
-  PRIVATE_SUBMODULE_SSH_KEY:
+  private_ssh_key:
+    description: 'SSH key for fetching private submodules'
     required: false
 
 outputs:
@@ -73,7 +73,7 @@ runs:
     - name: CircuitPython dependencies
       id: cp-deps
       env:
-        SSH_KEY: ${{ secrets.PRIVATE_SUBMODULE_SSH_KEY }}
+        SSH_KEY: ${{ inputs.private_ssh_key }}
       run: |
         mkdir $HOME/.ssh && echo "${{ env.SSH_KEY }}" > $HOME/.ssh/id_rsa && chmod 600 $HOME/.ssh/id_rsa
         python tools/ci_fetch_deps.py ${{ inputs.target || matrix.board || github.job }}
