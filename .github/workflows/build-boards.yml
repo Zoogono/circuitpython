@@ -77,6 +77,7 @@ jobs:
       run: python3 -u build_release_files.py
       working-directory: tools
       env:
+        REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
         BOARDS: ${{ matrix.board }}
         PULL: ${{ github.event.number }}
         HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
@@ -86,6 +87,16 @@ jobs:
       with:
         name: ${{ matrix.board }}
         path: bin/${{ matrix.board }}
+
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v1
+      if: ${{ github.event_name == 'release' }}
+      env:
+        RELEASE_WRITE_TOKEN: ${{ secrets.RELEASE_WRITE_TOKEN }}
+      with:
+        files: |
+          bin/${{ matrix.board }}/**/*
+        token: ${{ env.RELEASE_WRITE_TOKEN }}
 
     - name: Upload to S3
       uses: ./.github/actions/upload_aws

@@ -5,177 +5,162 @@ on:
   pull_request:
   release:
     types: [published]
-  check_suite:
-    types: [rerequested]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
-  test:
+  scheduler:
     runs-on: ubuntu-20.04
     outputs:
       boards-arm: ${{ steps.set-matrix.outputs.boards-arm }}
     steps:
     - name: Dump GitHub context
+      run: echo "$GITHUB_CONTEXT"
       env:
         GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo "$GITHUB_CONTEXT"
-    - uses: actions/checkout@v2.2.0
+    - name: Set up repository
+      uses: actions/checkout@v4
       with:
         submodules: false
+        show-progress: false
         fetch-depth: 1
-    - name: Set up Python 3
-      uses: actions/setup-python@v2
+    - name: Set up python
+      uses: actions/setup-python@v5
       with:
-        python-version: "3.x"
-    - name: Get CP deps
-      run: python tools/ci_fetch_deps.py test ${{ github.sha }}
-    - name: CircuitPython version
-      run: |
-        tools/describe || git log --parents HEAD~4..
-        echo >>$GITHUB_ENV CP_VERSION=$(tools/describe)
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y eatmydata
-        sudo eatmydata apt-get install -y gettext gcc-aarch64-linux-gnu mingw-w64
-        pip install -r requirements-ci.txt -r requirements-dev.txt
-    - name: Versions
-      run: |
-        gcc --version
-        python3 --version
-    # - name: Duplicate USB VID/PID Check
+        python-version: 3.x
+    # - name: Duplicate USB VID/PID check
     #   run: python3 -u -m tools.ci_check_duplicate_usb_vid_pid
-    - name: Build mpy-cross
-      run: make -C mpy-cross -j2
-    - name: Build unix port
-      run: |
-        make -C ports/unix VARIANT=coverage -j2
-    - name: Test all
-      run: MICROPY_CPYTHON3=python3.8 MICROPY_MICROPYTHON=../ports/unix/micropython-coverage ./run-tests.py -j1
-      working-directory: tests
-    - name: Print failure info
-      run: MICROPY_CPYTHON3=python3.8 MICROPY_MICROPYTHON=../ports/unix/micropython-coverage ./run-tests.py -j1 --print-failures
-      if: failure()
-      working-directory: tests
-    - name: Native Tests
-      run: MICROPY_CPYTHON3=python3.8 MICROPY_MICROPYTHON=../ports/unix/micropython-coverage ./run-tests.py -j1 --emit native
-      working-directory: tests
-    - name: mpy Tests
-      run: MICROPY_CPYTHON3=python3.8 MICROPY_MICROPYTHON=../ports/unix/micropython-coverage ./run-tests.py -j1 --via-mpy -d basics float micropython
-      working-directory: tests
-    - name: Native mpy Tests
-      run: MICROPY_CPYTHON3=python3.8 MICROPY_MICROPYTHON=../ports/unix/micropython-coverage ./run-tests.py -j1 --via-mpy --emit native -d basics float micropython
-      working-directory: tests
-    - name: Build native modules
-      run: |
-        make -C examples/natmod/features1
-        make -C examples/natmod/features2
-        make -C examples/natmod/btree
-        make -C examples/natmod/framebuf
-        make -C examples/natmod/uheapq
-        make -C examples/natmod/urandom
-        make -C examples/natmod/ure
-        make -C examples/natmod/uzlib
-    - name: Test native modules
-      run: MICROPY_CPYTHON3=python3.8 MICROPY_MICROPYTHON=../ports/unix/micropython-coverage ./run-natmodtests.py extmod/{btree*,framebuf*,uheapq*,ure*,uzlib*}.py
-      working-directory: tests
-    - name: Build mpy-cross.static-aarch64
-      run: make -C mpy-cross -j2 -f Makefile.static-aarch64
-    - uses: actions/upload-artifact@v2
+    - name: Set up submodules
+      id: set-up-submodules
+      uses: ./.github/actions/deps/submodules
       with:
-        name: mpy-cross.static-aarch64
-        path: mpy-cross/mpy-cross.static-aarch64
-    - name: Build mpy-cross.static-raspbian
-      run: make -C mpy-cross -j2 -f Makefile.static-raspbian
-    - uses: actions/upload-artifact@v2
+        action: cache
+        version: true
+    - name: Set up external
+      uses: ./.github/actions/deps/external
       with:
-        name: mpy-cross.static-raspbian
-        path: mpy-cross/mpy-cross.static-raspbian
-    - name: Build mpy-cross.static
-      run: make -C mpy-cross -j2 -f Makefile.static
-    - uses: actions/upload-artifact@v2
+        action: cache
+    - name: Set up mpy-cross
+      uses: ./.github/actions/mpy_cross
       with:
-        name: mpy-cross.static-amd64-linux
-        path: mpy-cross/mpy-cross.static
-    - name: Build mpy-cross.static-mingw
-      run: make -C mpy-cross -j2 -f Makefile.static-mingw
-    - uses: actions/upload-artifact@v2
-      with:
-        name: mpy-cross.static-x64-windows
-        path: mpy-cross/mpy-cross.static.exe
-    - name: "Get changes"
+        cp-version: ${{ steps.set-up-submodules.outputs.version }}
+        download: false
+    - name: Get last commit with checks
+      id: get-last-commit-with-checks
       if: github.event_name == 'pull_request'
-      uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        list-files: json
-        filters: |
-          changed:
-            - '**'
-    - name: "Set matrix"
+      working-directory: tools
+      run: python3 -u ci_changes_per_commit.py
+      env:
+        REPO: ${{ github.repository }}
+        PULL: ${{ github.event.number }}
+        GITHUB_TOKEN: ${{ github.token }}
+        EXCLUDE_COMMIT: ${{ github.event.pull_request.head.sha }}
+    - name: Set head sha (pull)
+      if: github.event_name == 'pull_request'
+      run: echo "HEAD_SHA=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+    - name: Set base sha (pull)
+      if: github.event_name == 'pull_request'
+      run: git cat-file -e $SHA && echo "BASE_SHA=$SHA" >> $GITHUB_ENV || true
+      env:
+        SHA: ${{ steps.get-last-commit-with-checks.outputs.commit_sha || github.event.pull_request.base.sha }}
+    - name: Set head sha (push)
+      if: github.event_name == 'push'
+      run: echo "HEAD_SHA=${{ github.event.after }}" >> $GITHUB_ENV
+    - name: Set base sha (push)
+      if: github.event_name == 'push'
+      run: git cat-file -e $SHA && echo "BASE_SHA=$SHA" >> $GITHUB_ENV || true
+      env:
+        SHA: ${{ github.event.before }}
+    - name: Set matrix
       id: set-matrix
+      run: python3 -u ci_set_matrix.py
       working-directory: tools
       env:
-        CHANGED_FILES: '["ports/nrf/boards/zoog/mpconfig.mk"]'
-      run: python3 -u ci_set_matrix.py
+        LAST_FAILED_JOBS: ${{ steps.get-last-commit-with-checks.outputs.check_runs }}
 
-  build-arm:
-    runs-on: ubuntu-20.04
-    needs: test
+  tests:
+    needs: scheduler
+    uses: ./.github/workflows/run-tests.yml
+    with:
+      cp-version: ${{ needs.scheduler.outputs.cp-version }}
+
+  mpy-cross:
+    needs: scheduler
+    if: needs.scheduler.outputs.ports != '{}'
+    uses: ./.github/workflows/build-mpy-cross.yml
+    secrets: inherit
+    with:
+      cp-version: ${{ needs.scheduler.outputs.cp-version }}
+
+  ports:
+    needs: [scheduler, mpy-cross, tests]
+    if: needs.scheduler.outputs.ports != '{}'
+    uses: ./.github/workflows/build-boards.yml
+    secrets: inherit
     strategy:
       fail-fast: false
       matrix:
-        board: ${{ fromJSON(needs.test.outputs.boards-arm) }}
-    if: ${{ needs.test.outputs.boards-arm != '[]' }}
-    steps:
-    - name: Set up Python 3
-      uses: actions/setup-python@v2
-      with:
-        python-version: "3.x"
-    - uses: actions/checkout@v2.2.0
-      with:
-        submodules: false
-        fetch-depth: 1
-    - name: Get CP deps
-      env:
-        SSH_KEY: ${{ secrets.PRIVATE_SUBMODULE_SSH_KEY }}
-      run: |
-        mkdir $HOME/.ssh && echo "${{ env.SSH_KEY }}" > $HOME/.ssh/id_rsa && chmod 600 $HOME/.ssh/id_rsa
-        python tools/ci_fetch_deps.py ${{ matrix.board }} ${{ github.sha }}
-    - name: Install dependencies
-      run: |
-        sudo apt-get install -y gettext
-        pip install -r requirements-ci.txt -r requirements-dev.txt
-        wget --no-verbose https://adafruit-circuit-python.s3.amazonaws.com/gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2
-        sudo tar -C /usr --strip-components=1 -xaf gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2
-    - name: Versions
-      run: |
-        gcc --version
-        arm-none-eabi-gcc --version
-        python3 --version
-    - name: mpy-cross
-      run: make -C mpy-cross -j2
-    - name: Setup build failure matcher
-      run: echo "::add-matcher::$GITHUB_WORKSPACE/.github/workflows/match-build-fail.json"
-    - name: build
-      run: python3 -u build_release_files.py
-      working-directory: tools
-      env:
-        REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
-        BOARDS: ${{ matrix.board }}
-    - uses: actions/upload-artifact@v2
-      with:
-        name: ${{ matrix.board }}
-        path: bin/${{ matrix.board }}
-    - name: Upload Release Asset
-      uses: softprops/action-gh-release@v1
-      if: ${{ github.event_name == 'release' }}
-      env:
-        RELEASE_WRITE_TOKEN: ${{ secrets.RELEASE_WRITE_TOKEN }}
-      with:
-        files: |
-          bin/${{ matrix.board }}/**/*
-        token: ${{ env.RELEASE_WRITE_TOKEN }}
+        port: ${{ fromJSON(needs.scheduler.outputs.ports).ports }}
+    with:
+      boards: ${{ toJSON(fromJSON(needs.scheduler.outputs.ports)[matrix.port]) }}
+      cp-version: ${{ needs.scheduler.outputs.cp-version }}
+
+  # build-arm:
+  #   runs-on: ubuntu-20.04
+  #   needs: test
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       board: ${{ fromJSON(needs.test.outputs.boards-arm) }}
+  #   if: ${{ needs.test.outputs.boards-arm != '[]' }}
+  #   steps:
+  #   - name: Set up Python 3
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: "3.x"
+  #   - uses: actions/checkout@v2.2.0
+  #     with:
+  #       submodules: false
+  #       fetch-depth: 1
+  #   - name: Get CP deps
+  #     env:
+  #       SSH_KEY: ${{ secrets.PRIVATE_SUBMODULE_SSH_KEY }}
+  #     run: |
+  #       mkdir $HOME/.ssh && echo "${{ env.SSH_KEY }}" > $HOME/.ssh/id_rsa && chmod 600 $HOME/.ssh/id_rsa
+  #       python tools/ci_fetch_deps.py ${{ matrix.board }} ${{ github.sha }}
+  #   - name: Install dependencies
+  #     run: |
+  #       sudo apt-get install -y gettext
+  #       pip install -r requirements-ci.txt -r requirements-dev.txt
+  #       wget --no-verbose https://adafruit-circuit-python.s3.amazonaws.com/gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2
+  #       sudo tar -C /usr --strip-components=1 -xaf gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2
+  #   - name: Versions
+  #     run: |
+  #       gcc --version
+  #       arm-none-eabi-gcc --version
+  #       python3 --version
+  #   - name: mpy-cross
+  #     run: make -C mpy-cross -j2
+  #   - name: Setup build failure matcher
+  #     run: echo "::add-matcher::$GITHUB_WORKSPACE/.github/workflows/match-build-fail.json"
+  #   - name: build
+  #     run: python3 -u build_release_files.py
+  #     working-directory: tools
+  #     env:
+  #       REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
+  #       BOARDS: ${{ matrix.board }}
+  #   - uses: actions/upload-artifact@v2
+  #     with:
+  #       name: ${{ matrix.board }}
+  #       path: bin/${{ matrix.board }}
+  #   - name: Upload Release Asset
+  #     uses: softprops/action-gh-release@v1
+  #     if: ${{ github.event_name == 'release' }}
+  #     env:
+  #       RELEASE_WRITE_TOKEN: ${{ secrets.RELEASE_WRITE_TOKEN }}
+  #     with:
+  #       files: |
+  #         bin/${{ matrix.board }}/**/*
+  #       token: ${{ env.RELEASE_WRITE_TOKEN }}
