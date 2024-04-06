@@ -38,9 +38,11 @@ def get_version_info_from_git(repo_path):
     except subprocess.CalledProcessError as er:
         if er.returncode == 128:
             # git exit code of 128 means no repository found
+            print("get_version_info_from_git - CalledProcessError")
             return None
         git_tag = ""
     except OSError:
+        print("get_version_info_from_git - OSError")
         return None
     try:
         git_hash = subprocess.check_output(
@@ -52,6 +54,7 @@ def get_version_info_from_git(repo_path):
     except subprocess.CalledProcessError:
         git_hash = "unknown"
     except OSError:
+        print("get_version_info_from_git - hash OSError")
         return None
 
     try:
@@ -70,6 +73,7 @@ def get_version_info_from_git(repo_path):
     except subprocess.CalledProcessError:
         git_hash += "-dirty"
     except OSError:
+        print("get_version_info_from_git - diff OSError")
         return None
 
     # CIRCUITPY-CHANGE
@@ -98,7 +102,6 @@ def make_version_header(repo_path, filename):
         cannot_determine_version()
     git_tag, git_hash, ver = info
     if len(ver) < 3:
-        print("make_version_header - len(ver) < 3", git_tag, git_hash, ver, info)
         cannot_determine_version()
     else:
         version_string = ".".join(ver)
