@@ -94,9 +94,11 @@ def make_version_header(repo_path, filename):
     # Get version info using git (required)
     info = get_version_info_from_git(repo_path)
     if info is None:
+        print("make_version_header - info was none")
         cannot_determine_version()
     git_tag, git_hash, ver = info
     if len(ver) < 3:
+        print("make_version_header - len(ver) < 3", git_tag, git_hash, ver, info)
         cannot_determine_version()
     else:
         version_string = ".".join(ver)
