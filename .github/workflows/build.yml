@@ -138,7 +138,7 @@ jobs:
       id: set-matrix
       working-directory: tools
       env:
-        CHANGED_FILES: '["ports/nrf/boards/zoog/mpconfig.mk"]'
+        CHANGED_FILES: ${{ steps.filter.outputs.changed_files }}
       run: python3 -u ci_set_matrix.py
 
 
@@ -284,11 +284,7 @@ jobs:
         submodules: false
         fetch-depth: 1
     - name: Get CP deps
-      env:
-        SSH_KEY: ${{ secrets.PRIVATE_SUBMODULE_SSH_KEY }}
-      run: |
-        mkdir $HOME/.ssh && echo "${{ env.SSH_KEY }}" > $HOME/.ssh/id_rsa && chmod 600 $HOME/.ssh/id_rsa
-        python tools/ci_fetch_deps.py ${{ matrix.board }} ${{ github.sha }}
+      run: python tools/ci_fetch_deps.py ${{ matrix.board }} ${{ github.sha }}
     - name: Install dependencies
       run: |
         sudo apt-get install -y gettext
@@ -308,28 +304,19 @@ jobs:
       run: python3 -u build_release_files.py
       working-directory: tools
       env:
-        REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
         BOARDS: ${{ matrix.board }}
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.board }}
         path: bin/${{ matrix.board }}
-    # - name: Upload to S3
-    #   run: "[ -z \"$AWS_ACCESS_KEY_ID\" ] || aws s3 cp bin/ s3://adafruit-circuit-python/bin/ --recursive --no-progress --region us-east-1"
-    #   env:
-    #     AWS_PAGER: ''
-    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #   if: (github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository_owner == 'adafruit') || (github.event_name == 'release' && (github.event.action == 'published' || github.event.action == 'rerequested'))
-    - name: Upload Release Asset
-      uses: softprops/action-gh-release@v1
-      if: ${{ github.event_name == 'release' }}
+    - name: Upload to S3
+      run: "[ -z \"$AWS_ACCESS_KEY_ID\" ] || aws s3 cp bin/ s3://adafruit-circuit-python/bin/ --recursive --no-progress --region us-east-1"
       env:
-        RELEASE_WRITE_TOKEN: ${{ secrets.RELEASE_WRITE_TOKEN }}
-      with:
-        files: |
-          bin/${{ matrix.board }}/**/*
-        token: ${{ env.RELEASE_WRITE_TOKEN }}
+        AWS_PAGER: ''
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      if: (github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository_owner == 'adafruit') || (github.event_name == 'release' && (github.event.action == 'published' || github.event.action == 'rerequested'))
+
 
   build-riscv:
     runs-on: ubuntu-20.04
