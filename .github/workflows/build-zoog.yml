@@ -50,32 +50,32 @@ jobs:
       with:
         cp-version: ${{ steps.set-up-submodules.outputs.version }}
         download: false
-    - name: Get last commit with checks
-      id: get-last-commit-with-checks
-      if: github.event_name == 'pull_request'
-      working-directory: tools
-      run: python3 -u ci_changes_per_commit.py
-      env:
-        REPO: ${{ github.repository }}
-        PULL: ${{ github.event.number }}
-        GITHUB_TOKEN: ${{ github.token }}
-        EXCLUDE_COMMIT: ${{ github.event.pull_request.head.sha }}
-    - name: Set head sha (pull)
-      if: github.event_name == 'pull_request'
-      run: echo "HEAD_SHA=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
-    - name: Set base sha (pull)
-      if: github.event_name == 'pull_request'
-      run: git cat-file -e $SHA && echo "BASE_SHA=$SHA" >> $GITHUB_ENV || true
-      env:
-        SHA: ${{ steps.get-last-commit-with-checks.outputs.commit_sha || github.event.pull_request.base.sha }}
-    - name: Set head sha (push)
-      if: github.event_name == 'push'
-      run: echo "HEAD_SHA=${{ github.event.after }}" >> $GITHUB_ENV
-    - name: Set base sha (push)
-      if: github.event_name == 'push'
-      run: git cat-file -e $SHA && echo "BASE_SHA=$SHA" >> $GITHUB_ENV || true
-      env:
-        SHA: ${{ github.event.before }}
+    # - name: Get last commit with checks
+    #   id: get-last-commit-with-checks
+    #   if: github.event_name == 'pull_request'
+    #   working-directory: tools
+    #   run: python3 -u ci_changes_per_commit.py
+    #   env:
+    #     REPO: ${{ github.repository }}
+    #     PULL: ${{ github.event.number }}
+    #     GITHUB_TOKEN: ${{ github.token }}
+    #     EXCLUDE_COMMIT: ${{ github.event.pull_request.head.sha }}
+    # - name: Set head sha (pull)
+    #   if: github.event_name == 'pull_request'
+    #   run: echo "HEAD_SHA=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+    # - name: Set base sha (pull)
+    #   if: github.event_name == 'pull_request'
+    #   run: git cat-file -e $SHA && echo "BASE_SHA=$SHA" >> $GITHUB_ENV || true
+    #   env:
+    #     SHA: ${{ steps.get-last-commit-with-checks.outputs.commit_sha || github.event.pull_request.base.sha }}
+    # - name: Set head sha (push)
+    #   if: github.event_name == 'push'
+    #   run: echo "HEAD_SHA=${{ github.event.after }}" >> $GITHUB_ENV
+    # - name: Set base sha (push)
+    #   if: github.event_name == 'push'
+    #   run: git cat-file -e $SHA && echo "BASE_SHA=$SHA" >> $GITHUB_ENV || true
+    #   env:
+    #     SHA: ${{ github.event.before }}
     - name: Set matrix
       id: set-matrix
       run: python3 -u ci_set_matrix.py
