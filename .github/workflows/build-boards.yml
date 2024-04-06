@@ -16,6 +16,10 @@ on:
         required: false
       PRIVATE_SUBMODULE_SSH_KEY:
         required: false
+      REPO_TOKEN:
+        required: false
+      RELEASE_WRITE_TOKEN:
+        required: false
 
 jobs:
   board:
