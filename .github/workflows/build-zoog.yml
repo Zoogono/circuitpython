@@ -12,9 +12,9 @@ concurrency:
 
 jobs:
   scheduler:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
-      boards-arm: ${{ steps.set-matrix.outputs.boards-arm }}
+      ports: ${{ steps.set-matrix.outputs.ports }}
     steps:
     - name: Dump GitHub context
       run: echo "$GITHUB_CONTEXT"
