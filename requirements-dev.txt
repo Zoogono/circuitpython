@@ -20,6 +20,7 @@ pre-commit
 
 # for combining the Nordic SoftDevice with CircuitPython
 intelhex
+crcmod
 
 # for building & testing natmods
 pyelftools
